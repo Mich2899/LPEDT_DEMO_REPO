@@ -38,6 +38,7 @@
 
 #include "app.h"
 #include "src/scheduler.h"
+#include "src/ble.h"
 
 
 // Include logging for this file
@@ -139,10 +140,10 @@ SL_WEAK void app_process_action(void)
   //         We will create/use a scheme that is far more energy efficient in
   //         later assignments.
 
-  uint32_t evt;                                   //variable to determine event
-    evt = getNextEvent();
-
-  temperature_state_machine(evt);
+//  uint32_t evt;                                   //variable to determine event
+//    evt = getNextEvent();
+//
+//  temperature_state_machine(evt);
 
 
 }
@@ -161,6 +162,7 @@ void sl_bt_on_event(sl_bt_msg_t *evt)
   
   // Just a trick to hide a compiler warning about unused input parameter evt.
   // We will add real functionality here later.
+  /***********************************************************************************************************************************************************/
   if (evt->header) {
       printf(".\n");
   }
@@ -168,12 +170,11 @@ void sl_bt_on_event(sl_bt_msg_t *evt)
   // Some events require responses from our application code,
   // and don’t necessarily advance our state machines.
   // For assignment 5 uncomment the next 2 function calls
-  // handle_ble_event(evt); // put this code in ble.c/.h
+   handle_ble_event(evt); // put this code in ble.c/.h
 
   // sequence through states driven by events
-  // state_machine(evt);    // put this code in scheduler.c/.h
+   temperature_state_machine(evt);    // put this code in scheduler.c/.h
   
   
    
 } // sl_bt_on_event()
-

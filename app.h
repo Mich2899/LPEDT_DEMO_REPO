@@ -56,7 +56,7 @@
 #include "src/i2c.h"
 
 
-#define LOWEST_ENERGY_MODE 3              //This macro decides the energy mode
+#define LOWEST_ENERGY_MODE 2              //This macro decides the energy mode
 #define LETIMER_PERIOD_MS 3000            //This macro defines the period of one complete on-off cycle of LED
 
 // See: https://docs.silabs.com/gecko-platform/latest/service/power_manager/overview

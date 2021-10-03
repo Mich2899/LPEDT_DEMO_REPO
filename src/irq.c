@@ -51,7 +51,7 @@ void I2C0_IRQHandler(void) {
         if (transferStatus == i2cTransferDone) {
             scheduler_evtI2C ();
         }
-        if (transferStatus < 0) {
+        if(transferStatus < 0) {
             LOG_ERROR("%d", transferStatus);
         }
 } // I2C0_IRQHandler()

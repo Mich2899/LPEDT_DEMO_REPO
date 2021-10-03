@@ -99,6 +99,7 @@ void timerWaitUs_irq(uint32_t us_wait){
   uint32_t difference, current, store;
 
 #if ((LOWEST_ENERGY_MODE == 0) || (LOWEST_ENERGY_MODE == 1) || (LOWEST_ENERGY_MODE == 2))
+
     uint32_t us_each_tick   = US_EACH_TICK_LFXO ;
     uint32_t wait_for_ticks = (us_wait/us_each_tick);
 
@@ -125,6 +126,7 @@ void timerWaitUs_irq(uint32_t us_wait){
                 difference= current - wait_for_ticks;                           //take the difference between current timer counter value and the required ticks
             }
             else{
+                LOG_ERROR("rollover");
                 difference = store - (wait_for_ticks - current);                //count until the counter reaches zero and calculate remaining number of ticks
             }
             LETIMER_CompareSet(LETIMER0, 1, difference);                        //Set COMP1 register to calculated value

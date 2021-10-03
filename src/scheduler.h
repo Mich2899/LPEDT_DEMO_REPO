@@ -55,19 +55,17 @@ void scheduler_evtCOMP1 ();
  * */
 void scheduler_evtI2C ();
 
-/*  function          : getNextEvent
- *  params            : none
- *  brief             : save the current event in a variable return that value and
- *                      set the myEvents variable to noEvent
- *  return-type       : uint32_t
- * */
-uint32_t getNextEvent();
-
 /*  function          : temperature_state_machine
  *  params            : uint32_t event
  *  brief             : Takes event as input and based on the previous state updates the next state
  *  return-type       : void
  * */
-void temperature_state_machine (uint32_t event);
+//void temperature_state_machine (uint32_t event);
 
+/*  function          : temperature_state_machine
+ *  params            : sl_bt_msg_t *evt
+ *  brief             : Takes event sent by bluetooth struct as input and based on the previous state updates the next state
+ *  return-type       : void
+ * */
+void temperature_state_machine (sl_bt_msg_t *evt);
 #endif /* SRC_SCHEDULER_H_ */

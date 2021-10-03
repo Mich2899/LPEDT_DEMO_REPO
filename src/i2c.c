@@ -7,6 +7,7 @@
 
 /*********************************************************INCLUDES****************************************************************/
 #include "i2c.h"
+#include "ble.h"
 // Include logging for this file
 #define INCLUDE_LOG_DEBUG 1
 #include "src/log.h"
@@ -19,7 +20,6 @@
   uint8_t read_data[2];                         // use for storing the 16 bit temperature data recieved from si7021 in array format
   uint16_t temp_data;                           // used for storing complete 16 bit data
   int Temperature;                              // Used to store the converted value
-
 
 /*******************************************************FUNCTION DEFINITION******************************************************/
 //Enables/Disables I2C sensor
@@ -112,8 +112,9 @@ void turnoff(){
 }
 
 
-void store(){
+int store(){
     temp_data = (read_data[0]<<8) + read_data[1];           //store the two 8-bit data into one 16-bit variable
     Temperature = ((175.72*(temp_data))/65536)-46.85;     //convert 16-bit data in degree Celcius format
-    //LOG_INFO("Temperature: %d\n\r", Temperature);
+    LOG_INFO("Temperature: %d\n\r", Temperature);
+    return Temperature;
 }
