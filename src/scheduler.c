@@ -51,6 +51,7 @@ void temperature_state_machine (sl_bt_msg_t *evt) {
      state_t currentState;                                                      //variable to get the current state
      static state_t nextState = Idle;                                           //initializing next state as ideal
      currentState = nextState;                                                  //initialize current state as next state
+     ble_data_struct_t *bleDataPtr = getBleDataPtr();
 
      LOG_INFO("Event: %d\n\r",evt->data.evt_system_external_signal.extsignals);
      switch (currentState) {                                                    //check the value of current state
@@ -60,7 +61,7 @@ void temperature_state_machine (sl_bt_msg_t *evt) {
              warmup();                                                          //turn the sensor on
              timerWaitUs_irq(80000);                                            //wait for power up of 7021
              nextState = Warmup ;                                               //set the next state to warmup
-         }
+          }
          break;
 
 
@@ -82,10 +83,6 @@ void temperature_state_machine (sl_bt_msg_t *evt) {
              timerWaitUs_irq(10800);                                            //wait at least 10.8ms
              nextState = timerwait;                                             //set next state to timerwait
          }
-         else {
-             I2C_write();
-             nextState = write;
-         }
          break;
 
 
@@ -106,6 +103,10 @@ void temperature_state_machine (sl_bt_msg_t *evt) {
              NVIC_DisableIRQ(I2C0_IRQn);                                        //Disable I2C interrupt
              turnoff();                                                         //turn the sensor off
              sl_power_manager_remove_em_requirement(SL_POWER_MANAGER_EM1);      //go back to EM3 sleep state
+             if(bleDataPtr->i_am_a_bool == true){
+                         sl_bt_ht_temperature_measurement_indication_changed_cb(bleDataPtr->connection_handle,
+                                                                                bleDataPtr->characteristic);
+             }
              nextState = Idle;                                                  //set next state to Idle
          }
          break;

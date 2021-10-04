@@ -129,6 +129,7 @@ void timerWaitUs_irq(uint32_t us_wait){
                 LOG_ERROR("rollover");
                 difference = store - (wait_for_ticks - current);                //count until the counter reaches zero and calculate remaining number of ticks
             }
+            LETIMER_IntClear(LETIMER0, LETIMER_IFC_COMP1);
             LETIMER_CompareSet(LETIMER0, 1, difference);                        //Set COMP1 register to calculated value
             LETIMER_IntEnable(LETIMER0, LETIMER_IEN_COMP1);                     //Enable COMP1 interrupt
     }

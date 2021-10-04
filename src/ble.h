@@ -27,6 +27,10 @@ typedef struct {
       // values unique for server
       uint8_t advertisingSetHandle;
 
+      uint8_t connection_handle;
+
+      uint16_t characteristic;
+
       bool i_am_a_bool;
       // values unique for client
 
@@ -39,6 +43,6 @@ void handle_ble_event(sl_bt_msg_t *evt);
 
 void sl_bt_ht_temperature_measurement_indication_confirmed_cb(uint8_t connection);
 
-void sl_bt_ht_temperature_measurement_indication_changed_cb(uint8_t connection, sl_bt_gatt_client_config_flag_t client_config);
+void sl_bt_ht_temperature_measurement_indication_changed_cb(uint8_t connection, uint16_t characteristic);
 
 #endif /* SRC_BLE_H_ */
