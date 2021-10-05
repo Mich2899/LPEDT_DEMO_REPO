@@ -1,6 +1,7 @@
 /*
  * ble.c
- *
+ *  Handles all the bluetooth related events.
+ *  Checks for indication flags and sends the required information to the EFR connect app.
  *  Created on: Sep 30, 2021
  *      Author: mich1576
  */
@@ -17,11 +18,12 @@
 #include "src/log.h"
 
 
-sl_bt_msg_t *evt;
-float temp;
+sl_bt_msg_t *evt;                                                               //evt struct that stores data and header.
+float temp;                                                                     //stores the value of temperature recorded from Si7021
+                                                                                //which is later converted to bitstream to send to the app.
 
 // Connection handle.
-static uint8_t app_connection = 0;
+static uint8_t app_connection = 0;                                              //stores the handles
 
 // BLE private data
 ble_data_struct_t ble_data;
@@ -32,9 +34,17 @@ ble_data_struct_t* getBleDataPtr() {
   return (&ble_data);
 } // getBleDataPtr()
 
+/**************************************************************************//**
+ * Temperature Measurement characteristic indication confirmed.
+ *****************************************************************************/
+SL_WEAK void sl_bt_ht_temperature_measurement_indication_confirmed_cb(uint8_t connection)
+{
+  (void)connection;
+}
+
 void handle_ble_event(sl_bt_msg_t *evt) {
 
-  sl_status_t retstat;
+  sl_status_t retstat;                                                          //stores the return status of different bluetooth API functions
 
   switch (SL_BT_MSG_ID(evt->header)) {
   // ******************************************************
@@ -45,7 +55,7 @@ void handle_ble_event(sl_bt_msg_t *evt) {
   // Do not call any stack API commands before receiving this boot event!
   // Including starting BT stack soft timers!
   // --------------------------------------------------------
-  //Some cases are handled in a manner the soc thermometer example handles them
+  // ATTRIBUTION NOTE:Some cases are handled in a manner the "SOC THERMOMETER" example handles them
       case sl_bt_evt_system_boot_id:
         // handle boot event
 
@@ -63,12 +73,13 @@ void handle_ble_event(sl_bt_msg_t *evt) {
         // Set advertising interval to 250ms.
         retstat = sl_bt_advertiser_set_timing(
             ble_data.advertisingSetHandle, // advertising set handle
-            0x190, // min. adv. interval (milliseconds * 1.6) 250*1.6 = 400 hex 190
-            0x190, // max. adv. interval (milliseconds * 1.6) 250*1.6 = 400 hex 190
-            0,   // adv. duration
-            0);  // max. num. adv. events
+            0x190,                                                              // min. adv. interval (milliseconds * 1.6) 250*1.6 = 400 hex 190
+            0x190,                                                              // max. adv. interval (milliseconds * 1.6) 250*1.6 = 400 hex 190
+            0,                                                                  // adv. duration
+            0);                                                                 // max. num. adv. events
         app_assert_status(retstat);
 
+        //Once the device is booted up start advertising
         retstat = sl_bt_advertiser_start(
             ble_data.advertisingSetHandle,
             sl_bt_advertiser_general_discoverable,
@@ -80,22 +91,25 @@ void handle_ble_event(sl_bt_msg_t *evt) {
       case sl_bt_evt_connection_opened_id:
         // handle open event
 
+        //Once the device is connected to the app stop advertising
         retstat = sl_bt_advertiser_stop(ble_data.advertisingSetHandle);
         app_assert_status(retstat);
 
-        app_connection = evt->data.evt_connection_opened.connection;
-
+        //store the connection handle to send an indication for temperature
         ble_data.connection_handle = evt->data.evt_connection_opened.connection;
+
+        //set the connection parameters
         retstat = sl_bt_connection_set_parameters  (
-            app_connection,             // connection handle
-            0x3C,                       // min. connection. interval 75/ 1.25 = 60 hex 3C
-            0x3C,                       // max. connection. interval 75/ 1.25 = 60 hex 3C
-            0x04,                       // latency
-            0x50,                       // timeout
-            0,                          // min ce length
-            0xffff);                    // max ce length
+            ble_data.connection_handle,                                         // connection handle
+            60,                                                                 // min. connection. interval 75/ 1.25 = 60 hex 3C
+            60,                                                                 // max. connection. interval 75/ 1.25 = 60 hex 3C
+            0x03,                                                               // latency
+            0x50,                                                               // timeout
+            250,                                                                // min ce length
+            250);                                                               // max ce length
 
         app_assert_status(retstat);
+        LOG_INFO("connection set parameters return status: %ld\n\r", retstat);
 
         break;
       case sl_bt_evt_connection_closed_id:
@@ -110,63 +124,44 @@ void handle_ble_event(sl_bt_msg_t *evt) {
         break;
 
       case  sl_bt_evt_connection_parameters_id:
-        LOG_INFO("Connection params: connection=%d, interval=%d, latency=%d, timeout=%d, securitymode=%d",
+        //log all the connection parameters if any of them changes
+       /* LOG_INFO("Connection params: connection=%d\n\r, interval=%d\n\r, latency=%d\n\r, timeout=%d\n\r, securitymode=%d\n\r",
                 (int) (evt->data.evt_connection_parameters.connection),
                 (int) (evt->data.evt_connection_parameters.interval*1.25),
                 (int) (evt->data.evt_connection_parameters.latency),
                 (int) (evt->data.evt_connection_parameters.timeout*10),
                 (int) (evt->data.evt_connection_parameters.security_mode) );
-
+        */
         break;
 
         //Events for Slave/Server
-        // more case statements to handle other BT event
-        /*  PACKSTRUCT( struct sl_bt_evt_gatt_server_characteristic_status_s
-        {
-        uint8_t  connection;          // Connection handle
-        uint16_t characteristic;      // GATT characteristic handle. This value is normally received from the
-                                             gatt_characteristic event.
-        uint8_t  status_flags;        // Enum @ref
-                                             sl_bt_gatt_server_characteristic_status_flag_t.
-                                             Describes whether Client Characteristic
-                                             Configuration was changed or if a
-                                             confirmation was received. Values:
-                                             - <b>sl_bt_gatt_server_client_config
-                                               (0x1):</b> Characteristic client
-                                               configuration has been changed.
-                                             - <b>sl_bt_gatt_server_confirmation
-                                               (0x2):</b> Characteristic confirmation
-                                               has been received.
-        uint16_t client_config_flags;   // Enum @ref
-                                             sl_bt_gatt_server_client_configuration_t.
-                                             This field carries the new value of the
-                                             Client Characteristic Configuration. If the
-                                             status_flags is 0x2 (confirmation
-                                             received), the value of this field can be
-                                             ignored.
-        uint16_t client_config;         // The handle of client-config descriptor.
-      });
-      */
-
       case sl_bt_evt_gatt_server_characteristic_status_id:
+        //This flag is raised every time the characteristics of the connection change
         if(evt->data.evt_gatt_server_characteristic_status.characteristic == gattdb_temperature_measurement) {
             //Indicates either that a local Client Characteristic Configuration descriptor (CCCD) was changed by the remote GATT client
 
+            //check if the Characteristic client configuration has changed
             if(sl_bt_gatt_server_client_config == (sl_bt_gatt_server_characteristic_status_flag_t)evt->data.evt_gatt_server_characteristic_status.status_flags) {
+                //check if the indication is enabled
                 if (sl_bt_gatt_disable != (sl_bt_gatt_client_config_flag_t) evt->data.evt_gatt_server_characteristic_status.client_config_flags){
                     ble_data.characteristic = evt->data.evt_gatt_server_characteristic_status.characteristic;
-                    ble_data.i_am_a_bool = true;
+                    ble_data.i_am_a_bool_for_temp = true;
+                }
+                // confirmation of indication received from remove GATT client
+                else if (sl_bt_gatt_server_confirmation == (sl_bt_gatt_server_characteristic_status_flag_t)evt->data.evt_gatt_server_characteristic_status.status_flags) {
+                  sl_bt_ht_temperature_measurement_indication_confirmed_cb(
+                    evt->data.evt_gatt_server_characteristic_status.connection);
                 }
                 else{
-                    ble_data.i_am_a_bool = false;
-                    LOG_INFO("Indication disabled!!\n\r");
+                    ble_data.i_am_a_bool_for_temp = false;
+                    //LOG_INFO("Indication disabled!!\n\r");
                 }
             }
         }
         break;
 
       case sl_bt_evt_gatt_server_indication_timeout_id:
-        LOG_INFO("timeout\n\r");
+        //LOG_INFO("The connection timed out!!!\n\r");
         //Possible event from calling sl_bt_gatt_server_send_indication() -
         //i.e. we never received a confirmation for a previously transmitted indication.
         break;
@@ -178,24 +173,34 @@ void handle_ble_event(sl_bt_msg_t *evt) {
 void sl_bt_ht_temperature_measurement_indication_changed_cb(uint8_t connection, uint16_t characteristic)
 {
 
-  // Indication or notification enabled.
-      sl_status_t sc;
+    // -------------------------------------------------------------------
+    // Update our local GATT DB and send indication if enabled for the characteristic
+    // -------------------------------------------------------------------
 
-      uint8_t htm_temperature_buffer[5];
-      uint8_t *p = htm_temperature_buffer;
-      uint32_t htm_temperature_flt;
+      sl_status_t sc;                                                           //to store and check the return status
+
+      uint8_t htm_temperature_buffer[5];                                        // Stores the temperature data in the Health Thermometer (HTM) format.
+                                                                                // format of the buffer is: flags_byte + 4-bytes of IEEE-11073 32-bit float
+      uint8_t *p = htm_temperature_buffer;                                      // Pointer to HTM temperature buffer needed for converting values to bitstream.
+      uint32_t htm_temperature_flt;                                             // Stores the temperature data read from the sensor in the IEEE-11073 32-bit float format
 
       temp = store();
 
+      uint8_t flags = 0x00;                                                     // HTM flags set as 0 for Celsius, no time stamp and no temperature type.
+
+      // "bitstream" refers to the order of bytes and bits sent. byte[0] is sent first, followed by byte[1]...
+      UINT8_TO_BITSTREAM(p, flags); // put the flags byte in first, "convert" is a strong word, it places the byte into the buffer
+
+      // Convert sensor data to IEEE-11073 32-bit floating point format.
       htm_temperature_flt = UINT32_TO_FLOAT(temp*1000, -3);
+
       // Convert temperature to bitstream and place it in the htm_temperature_buffer
       UINT32_TO_BITSTREAM(p, htm_temperature_flt);
 
-
       sc = sl_bt_gatt_server_write_attribute_value( gattdb_temperature_measurement, // handle from gatt_db.h
-                                                    0, // offset
-                                                    5, // length
-                                                    &htm_temperature_buffer[0]); // pointer to buffer where data is
+                                                    0,                              // offset
+                                                    5,                              // length
+                                                    &htm_temperature_buffer[0]);    // pointer to buffer where data is
 
 
       if (sc != SL_STATUS_OK) {
@@ -203,10 +208,10 @@ void sl_bt_ht_temperature_measurement_indication_changed_cb(uint8_t connection, 
       }
 
       //convert and store the temperature data for logging
-      sc = sl_bt_gatt_server_send_indication(connection,
-                                             characteristic,
-                                             5, // length
-                                             &htm_temperature_buffer[0]); // pointer to buffer where data is);
+      sc = sl_bt_gatt_server_send_indication(connection,                        //connection handle
+                                             characteristic,                    //for what characteristic we are sending an indication
+                                             5,                                 // length
+                                             &htm_temperature_buffer[0]);       // pointer to buffer where data is);
       if (sc != SL_STATUS_OK) {
       LOG_ERROR("sl_bt_gatt_server_send_indication() returned != 0 status=0x%04x", (unsigned int) sc);
       }

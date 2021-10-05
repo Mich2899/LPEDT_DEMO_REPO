@@ -31,7 +31,7 @@ timerwait = 4,
 //function prototypes
 /*  function          : scheduler_evtUF
  *  params            : none
- *  brief             : set the myevents global variable to underflow event
+ *  brief             : set the external signal of ble to underflow event
  *                      Makes sure that the variable is assigned value in critical section
  *                      Based on the previous state of the state machine, which would be idle
  *
@@ -41,7 +41,7 @@ void scheduler_evtUF ();
 
 /*  function          : scheduler_evtCOMP1
  *  params            : none
- *  brief             : set the myevents global variable to COMP1 event
+ *  brief             : set the external signal of ble global variable to COMP1 event
  *                      Makes sure that the variable is assigned value in critical section
  *  return-type       : void
  * */
@@ -49,18 +49,11 @@ void scheduler_evtCOMP1 ();
 
 /*  function          : scheduler_evtI2C
  *  params            : none
- *  brief             : set the myevents global variable to I2C event
+ *  brief             : set the external signal of ble global variable to I2C event
  *                      Makes sure that the variable is assigned value in critical section
  *  return-type       : void
  * */
 void scheduler_evtI2C ();
-
-/*  function          : temperature_state_machine
- *  params            : uint32_t event
- *  brief             : Takes event as input and based on the previous state updates the next state
- *  return-type       : void
- * */
-//void temperature_state_machine (uint32_t event);
 
 /*  function          : temperature_state_machine
  *  params            : sl_bt_msg_t *evt

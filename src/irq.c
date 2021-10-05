@@ -7,13 +7,12 @@
 
 /*********************************************************INCLUDES****************************************************************/
 #include "irq.h"
+#include "ble.h"
 
 // Include logging for this file
 #define INCLUDE_LOG_DEBUG 1
 #include "log.h"
 
-
-uint32_t rollover_count=0, milliseconds=0;
 I2C_TransferReturn_TypeDef transferStatus;
 
 /****************************************************FUNCTION DEFINITION*********************************************************/
@@ -21,6 +20,7 @@ I2C_TransferReturn_TypeDef transferStatus;
 void LETIMER0_IRQHandler (void) {
 
     uint32_t flags;
+    ble_data_struct_t *bleDataPtr = getBleDataPtr();
         // determine source of IRQ
         flags = LETIMER_IntGetEnabled(LETIMER0);
         // clear source of IRQ set in step 3
@@ -29,7 +29,7 @@ void LETIMER0_IRQHandler (void) {
         if(flags & LETIMER_IF_UF){
             //call scheduler to read temperature data from SI7021
             scheduler_evtUF ();
-            rollover_count++;
+            bleDataPtr->rollover_count++;
         }
 
         if(flags & LETIMER_IF_COMP1){
@@ -57,11 +57,12 @@ void I2C0_IRQHandler(void) {
 } // I2C0_IRQHandler()
 
 uint32_t letimerMilliseconds(){
+  ble_data_struct_t *bleDataPtr = getBleDataPtr();
 #if ((LOWEST_ENERGY_MODE == 0) || (LOWEST_ENERGY_MODE == 1) || (LOWEST_ENERGY_MODE == 2))
-    milliseconds = rollover_count*LETIMER_PERIOD_MS + MILLIECONDS_PER_TICK_LFXO;
+  bleDataPtr->milliseconds = bleDataPtr->rollover_count*LETIMER_PERIOD_MS + MILLIECONDS_PER_TICK_LFXO;
 #elif (LOWEST_ENERGY_MODE == 3)
-    milliseconds = rollover_count*LETIMER_PERIOD_MS + MILLIECONDS_PER_TICK_ULFRCO;
+  bleDataPtr->milliseconds = bleDataPtr->rollover_count*LETIMER_PERIOD_MS + MILLIECONDS_PER_TICK_ULFRCO;
 #endif
 
-    return milliseconds;
+    return bleDataPtr->milliseconds;
 }

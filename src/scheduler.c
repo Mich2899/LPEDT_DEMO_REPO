@@ -12,8 +12,6 @@
 // Include logging for this file
 #define INCLUDE_LOG_DEBUG 1
 #include "src/log.h"
-/*******************************************************GLOBAL VARIABLES*********************************************************/
-//uint32_t myEvents = 0;
 
 /****************************************************FUNCTION DEFINITION**********************************************************/
 //set the sl_bt_external_signal to Underflow event.
@@ -53,14 +51,15 @@ void temperature_state_machine (sl_bt_msg_t *evt) {
      currentState = nextState;                                                  //initialize current state as next state
      ble_data_struct_t *bleDataPtr = getBleDataPtr();
 
-     LOG_INFO("Event: %d\n\r",evt->data.evt_system_external_signal.extsignals);
      switch (currentState) {                                                    //check the value of current state
        case Idle:                                                               //case when the device is in idle state
          nextState = Idle;                                                      //next state should be idle unless an event is encountered
-         if (evt->data.evt_system_external_signal.extsignals == evtUF) {                                                   //if an underflow event is encountered
+         if (evt->data.evt_system_external_signal.extsignals == evtUF) {        //if an underflow event is encountered
+             if(bleDataPtr->i_am_a_bool_for_temp == true){                               //checks if indication are enabled only then takes a measuremnt
              warmup();                                                          //turn the sensor on
              timerWaitUs_irq(80000);                                            //wait for power up of 7021
              nextState = Warmup ;                                               //set the next state to warmup
+             }
           }
          break;
 
@@ -103,10 +102,8 @@ void temperature_state_machine (sl_bt_msg_t *evt) {
              NVIC_DisableIRQ(I2C0_IRQn);                                        //Disable I2C interrupt
              turnoff();                                                         //turn the sensor off
              sl_power_manager_remove_em_requirement(SL_POWER_MANAGER_EM1);      //go back to EM3 sleep state
-             if(bleDataPtr->i_am_a_bool == true){
                          sl_bt_ht_temperature_measurement_indication_changed_cb(bleDataPtr->connection_handle,
                                                                                 bleDataPtr->characteristic);
-             }
              nextState = Idle;                                                  //set next state to Idle
          }
          break;

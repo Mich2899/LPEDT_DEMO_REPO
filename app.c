@@ -101,7 +101,6 @@ SL_WEAK void app_init(void)
   gpioInit();
   init_oscillators();                                 //Initialize oscillators
   initLETIMER0();                                     //initialize LETIMER0
-//  I2C_init();                                         //Initialize I2C
 
   LETIMER_Enable(LETIMER0,true);                      //Enable LETIMER0
   NVIC_ClearPendingIRQ (LETIMER0_IRQn);               //Clear all the pending IRQ for LETIMER0
