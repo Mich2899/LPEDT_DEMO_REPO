@@ -14,8 +14,6 @@
 
 //Defining the device address and the port for enabling the sensor
 #define SI7021_DEVICE_ADDR 0x40
-#define SENSOR_PORT     gpioPortD
-#define SENSOR_ENABLE   15
 
 //Defining the port used for I2C0 and the pins used for SCL and SDA
 #define I2C_port            gpioPortC
@@ -25,13 +23,6 @@
 #define SDA_PORT_LOCATION   16
 
 //function prototypes
-
-/* function     : gpio_I2C
- * params       : int on_off
- * brief        : Enables/Disables I2C sensor
- * return_type  : void
- * */
-void gpio_I2C(int on_off);
 
 /* function     : I2C_init
  * params       : none

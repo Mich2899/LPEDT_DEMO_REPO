@@ -25,6 +25,12 @@
 #define LED0_pin   4
 #define LED1_port gpioPortF
 #define LED1_pin   5
+#define SENSOR_PORT     gpioPortD
+#define SENSOR_ENABLE   15
+#define DISP_PORT     gpioPortF
+#define DISP_EXTCOMIN   18
+
+
 
 // Function prototypes
 void gpioInit();
@@ -36,8 +42,16 @@ void gpioLed1SetOff();
 //For toggling the LED
 void gpioToggleLED0();
 
+//void gpioSensorEnSetOn();
 
+/* function     : gpio_I2C
+ * params       : int on_off
+ * brief        : Enables/Disables I2C sensor
+ * return_type  : void
+ * */
+void gpio_I2C(int on_off);
 
+void gpioSetDisplayExtcomin(bool value);
 
 
 #endif /* SRC_GPIO_H_ */

@@ -44,4 +44,6 @@ static inline bool IsServerDevice() { return false; }
 
 #endif
 
+
+
 #endif /* SRC_BLE_DEVICE_TYPE_H_ */

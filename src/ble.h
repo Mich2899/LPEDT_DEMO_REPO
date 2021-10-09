@@ -33,6 +33,9 @@ typedef struct {
       //store the characteristic we are sending the indication for
       uint16_t characteristic;
 
+      //soft timer handle
+      uint8_t soft_timer_handle;
+
       //Rollover count
       uint8_t rollover_count;
 

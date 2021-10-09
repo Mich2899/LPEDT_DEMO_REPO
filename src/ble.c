@@ -13,6 +13,7 @@
 #include "app_assert.h"
 #include "ble.h"
 #include "i2c.h"
+#include "lcd.h"
 // Include logging for this file
 #define INCLUDE_LOG_DEBUG 1
 #include "src/log.h"
@@ -23,7 +24,7 @@ float temp;                                                                     
                                                                                 //which is later converted to bitstream to send to the app.
 
 // Connection handle.
-static uint8_t app_connection = 0;                                              //stores the handles
+//static uint8_t app_connection = 0;                                              //stores the handles
 
 // BLE private data
 ble_data_struct_t ble_data;
@@ -59,9 +60,23 @@ void handle_ble_event(sl_bt_msg_t *evt) {
       case sl_bt_evt_system_boot_id:
         // handle boot event
 
+        displayInit();
+
+        displayPrintf(DISPLAY_ROW_NAME, "%s", BLE_DEVICE_TYPE_STRING);                                  //SERVER
+        displayPrintf(DISPLAY_ROW_ASSIGNMENT, "A6");                                //ASSIGNMENT NUMBER
+
         //ID extracted from address
         retstat = sl_bt_system_get_identity_address(&ble_data.myAddress, &ble_data.myAddressType);
         app_assert_status(retstat);
+
+        // display address on LCD
+        displayPrintf(DISPLAY_ROW_BTADDR, "%02X:%02X:%02X:%02X:%02X:%02X",
+                                         ble_data.myAddress.addr[5],
+                                         ble_data.myAddress.addr[4],
+                                         ble_data.myAddress.addr[3],
+                                         ble_data.myAddress.addr[2],
+                                         ble_data.myAddress.addr[1],
+                                         ble_data.myAddress.addr[0]);//SERVER ADDRESS
 
         //store ID in advertisingSetHandle
         ble_data.advertisingSetHandle = 0xff;
@@ -85,6 +100,11 @@ void handle_ble_event(sl_bt_msg_t *evt) {
             sl_bt_advertiser_general_discoverable,
             sl_bt_advertiser_connectable_scannable);
         app_assert_status(retstat);
+
+        ble_data.soft_timer_handle = evt->data.evt_system_soft_timer.handle;
+
+        displayPrintf(DISPLAY_ROW_CONNECTION,"Advertising");
+
 
         break;
 
@@ -111,15 +131,21 @@ void handle_ble_event(sl_bt_msg_t *evt) {
         app_assert_status(retstat);
         LOG_INFO("connection set parameters return status: %ld\n\r", retstat);
 
+        displayPrintf(DISPLAY_ROW_CONNECTION,"Connected");
+
         break;
       case sl_bt_evt_connection_closed_id:
         // handle close event
         // Restart advertising after client has disconnected.
+        ble_data.i_am_a_bool_for_temp = false;
         retstat = sl_bt_advertiser_start(
             ble_data.advertisingSetHandle,
             sl_bt_advertiser_general_discoverable,
             sl_bt_advertiser_connectable_scannable);
         app_assert_status(retstat);
+
+        displayPrintf(DISPLAY_ROW_CONNECTION,"Advertising");
+        displayPrintf(DISPLAY_ROW_TEMPVALUE, "");
 
         break;
 
@@ -153,6 +179,7 @@ void handle_ble_event(sl_bt_msg_t *evt) {
                     evt->data.evt_gatt_server_characteristic_status.connection);
                 }
                 else{
+                    displayPrintf(DISPLAY_ROW_TEMPVALUE, "");
                     ble_data.i_am_a_bool_for_temp = false;
                     //LOG_INFO("Indication disabled!!\n\r");
                 }
@@ -165,6 +192,9 @@ void handle_ble_event(sl_bt_msg_t *evt) {
         //Possible event from calling sl_bt_gatt_server_send_indication() -
         //i.e. we never received a confirmation for a previously transmitted indication.
         break;
+
+      case sl_bt_evt_system_soft_timer_id:
+        displayUpdate();
   } // end - switch
 
 } // handle_ble_event()
@@ -216,5 +246,7 @@ void sl_bt_ht_temperature_measurement_indication_changed_cb(uint8_t connection, 
       LOG_ERROR("sl_bt_gatt_server_send_indication() returned != 0 status=0x%04x", (unsigned int) sc);
       }
 
+      displayPrintf(DISPLAY_ROW_TEMPVALUE, "%f", temp);
 }
+
 

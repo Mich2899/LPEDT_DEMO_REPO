@@ -100,7 +100,7 @@ void temperature_state_machine (sl_bt_msg_t *evt) {
          nextState = read;                                                      //next state should be timerwait until an event encountered
          if (evt->data.evt_system_external_signal.extsignals == evtI2C) {                                                  //if I2C event encountered
              NVIC_DisableIRQ(I2C0_IRQn);                                        //Disable I2C interrupt
-             turnoff();                                                         //turn the sensor off
+             //turnoff();                                                         //turn the sensor off
              sl_power_manager_remove_em_requirement(SL_POWER_MANAGER_EM1);      //go back to EM3 sleep state
                          sl_bt_ht_temperature_measurement_indication_changed_cb(bleDataPtr->connection_handle,
                                                                                 bleDataPtr->characteristic);

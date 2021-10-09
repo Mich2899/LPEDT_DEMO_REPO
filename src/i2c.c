@@ -22,11 +22,6 @@
   float Temperature;                              // Used to store the converted value
 
 /*******************************************************FUNCTION DEFINITION******************************************************/
-//Enables/Disables I2C sensor
-void gpio_I2C(int on_off){
-  GPIO_PinModeSet(SENSOR_PORT, SENSOR_ENABLE, gpioModePushPull, on_off);
-
-}
 
 //Initializes the I2CSPM_Init_TypeDef structure
 void I2C_init(){

@@ -71,6 +71,23 @@ void gpioToggleLED0()
 } // gpioToggleLED0(0
 
 
+//void gpioSensorEnSetOn()
+//{
+//  GPIO_PinModeSet(SENSOR_PORT, SENSOR_ENABLE, gpioModePushPull, on_off);
+//}
+
+//Enables/Disables I2C sensor
+void gpio_I2C(int on_off){
+  GPIO_PinModeSet(SENSOR_PORT, SENSOR_ENABLE, gpioModePushPull, on_off);
+
+}
+
+//toggle the EXTCOMIN pin for operation of LCD
+void gpioSetDisplayExtcomin(bool value)
+{
+  GPIO_PinModeSet(DISP_PORT, DISP_EXTCOMIN, gpioModePushPull, value);
+}
+
 
 
 

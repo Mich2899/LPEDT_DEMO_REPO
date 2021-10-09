@@ -35,8 +35,6 @@
 #include "glib.h" // the low-level graphics driver/library
 #include "dmd.h"  // the dot matrix display driver
 
-
-
 /**
  * Display row definitions, used for writing specific content based on
  * assignment requirements. See assignment text for details.
